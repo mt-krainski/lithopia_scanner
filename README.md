@@ -8,3 +8,6 @@ Application for the Lithopia project, which extracts latest Sentinel-2 image for
 - [Copernicus data API](https://scihub.copernicus.eu/userguide/APIsOverview)
 - [Sentinel-2 acquisition plans](https://sentinel.esa.int/web/sentinel/missions/sentinel-2/acquisition-plans)
 - [Sentinel Application Platform](http://step.esa.int/main/toolboxes/snap/) - useful tool for initial visualization of data
+
+## Used libraries:
+- [geopyspark] (https://geopyspark.readthedocs.io/en/latest/index.html) - *I needed to install shapely manually from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely). For some reason, installation of egg\_info was failing*
