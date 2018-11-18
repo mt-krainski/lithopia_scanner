@@ -7,4 +7,4 @@ Application for the Lithopia project, which extracts latest Sentinel-2 image for
 - [Copernicus data portal](https://scihub.copernicus.eu/dhus/#/home)
 - [Copernicus data API](https://scihub.copernicus.eu/userguide/APIsOverview)
 - [Sentinel-2 acquisition plans](https://sentinel.esa.int/web/sentinel/missions/sentinel-2/acquisition-plans)
-- 
+- [Sentinel Application Platform](http://step.esa.int/main/toolboxes/snap/) - useful tool for initial visualization of data
