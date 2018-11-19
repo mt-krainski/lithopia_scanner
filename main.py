@@ -10,7 +10,11 @@ from pyspark import SparkContext
 class ArchiveContentsWarning(ResourceWarning):
     pass
 
-conf = gps.geopyspark_conf(master="local[*]", appName="sentinel-ingest-example")
+print("Starting script...")
+
+conf = gps.geopyspark_conf(
+    master="local[*]",
+    appName="sentinel-ingest-example",)
 pysc = SparkContext(conf=conf)
 
 DATA_PATH = "data"
@@ -47,17 +51,30 @@ def get_tci_image_filename(archive):
                 warnings.warn("Warning! More than one TCI file found!", ArchiveContentsWarning)
     return image_file
 
+print("Extracting image path...")
+
 archive_path = os.path.join(DATA_PATH, DATASET_NAME+ARCHIVE_EXT)
 
 archive = zipfile.ZipFile(archive_path)
 
 image_file = get_tci_image_filename(archive)
 
+print("Loading image...")
+
+# Based on https://geopyspark.readthedocs.io/en/latest/tutorials/reading-in-sentinel-data.html
 with rasterio.open("zip://" + archive_path + "!" + image_file) as f:
     image = f.read(1)
     extent = gps.Extent(*f.bounds)
-    projected_extent = gps.ProjectedExtent(extent=extent, epsg=int(f.crs.to_dict()['init'][5:]))
-
+    projected_extent = gps.ProjectedExtent(
+        extent=extent,
+        epsg=int(f.crs.to_dict()['init'][5:]))
+    tile = gps.Tile.from_numpy_array(
+        numpy_array=image,
+        no_data_value=f.nodata)
+    rdd = pysc.parallelize([(projected_extent, tile)])
+    raster_layer = gps.RasterLayer.from_numpy_rdd(
+        layer_type=gps.LayerType.SPATIAL,
+        numpy_rdd=rdd)
 
 
 def read_zip_file(filepath):

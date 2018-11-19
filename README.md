@@ -9,6 +9,8 @@ Application for the Lithopia project, which extracts latest Sentinel-2 image for
 - [Sentinel-2 acquisition plans](https://sentinel.esa.int/web/sentinel/missions/sentinel-2/acquisition-plans)
 - [Sentinel Application Platform](http://step.esa.int/main/toolboxes/snap/) - useful tool for initial visualization of data
 - `geopyspark` requires spark (can be installed with `pip install pyspark`). It also requires an environmental variable SPARK\_HOME to be set. If installed with `pip`, pyspark creates a script `find_spark_home.py`, which can be used to determine to correct path
+- `geopyspark` requires to run `geopyspark install-jars` after it's installation
+- `spark` requires `winutils.exe` under Windows. Download winutils.exe from [here](http://public-repo-1.hortonworks.com/hdp-win-alpha/winutils.exe), copy it to a folder (e.g. `C:\winutils\bin`), then point `HADOOP_HOME` to that folder
 
 ## Used libraries:
 
