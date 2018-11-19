@@ -43,6 +43,7 @@ def get_data_size(entry):
 def download_file(url, filename="temp.zip", filesize=None):
     local_filename = path.join(DATA_PATH, filename)
     # NOTE the stream=True parameter
+    print("Downloading file...")
     with credentials.request(url, stream=True) as r:
         with open(local_filename, 'wb') as f:
             chunk_id = 0
@@ -51,6 +52,8 @@ def download_file(url, filename="temp.zip", filesize=None):
                     stdout.write(f"\rDownloaded {format_size(chunk_id*1024)}")
                     if filesize is not None:
                         stdout.write(f" of {filesize}")
+                    else:
+                        stdout.write(f"...")
                     stdout.write(10*" ")
                     stdout.flush()
                 if chunk: # filter out keep-alive new chunks
@@ -58,7 +61,13 @@ def download_file(url, filename="temp.zip", filesize=None):
                     #f.flush() commented by recommendation from J.F.Sebastian
                 chunk_id += 1
 
+    stdout.write(f"\rDownloaded {format_size(chunk_id*1024)}")
+    if filesize is not None:
+        stdout.write(f" of {filesize}")
+    else:
+        stdout.write(f"...")
     stdout.write("\n")
+    print("Done!")
     return local_filename
 
 
@@ -85,6 +94,4 @@ if __name__ == "__main__":
 
     download_link = get_data_link(entry)
 
-    print("Downloading file...")
     download_file(*download_link, filesize=get_data_size(entry))
-    print("Done!")

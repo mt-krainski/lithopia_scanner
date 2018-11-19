@@ -13,9 +13,7 @@ response = request_last_dataset.request_sentinel_2_data(SAMPLE_LOCATION)
 entry = response.json()['feed']['entry'][0]
 download_link = request_last_dataset.get_data_link(entry)
 
-print("Downloading file...")
 request_last_dataset.download_if_not_present(*download_link)
-print("Done!")
 
 archive_path = os.path.join(DATA_PATH,
                             download_link[1])
