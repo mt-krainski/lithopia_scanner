@@ -16,5 +16,5 @@ Application for the Lithopia project, which extracts latest Sentinel-2 image for
 
 *note: Development was done on Windows 10 and that's the system to which the installation notes apply*
 
-- [geopyspark] (https://geopyspark.readthedocs.io/en/latest/index.html) - *I needed to install shapely manually from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely). For some reason, installation of egg\_info was failing*
-- [rasterio] (https://rasterio.readthedocs.io/en/latest/index.html) - *Also needed to be installed manually from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio) and required GDAL, which can be found [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)*
+- [geopyspark](https://geopyspark.readthedocs.io/en/latest/index.html) - *I needed to install shapely manually from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely). For some reason, installation of egg\_info was failing*
+- [rasterio](https://rasterio.readthedocs.io/en/latest/index.html) - *Also needed to be installed manually from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio) and required GDAL, which can be found [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)*
