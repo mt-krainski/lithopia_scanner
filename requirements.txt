@@ -1,8 +1,6 @@
-geopyspark
 requests
 numpy
 rasterio
 pyspark
 resource
 matplotlib
-lxml
