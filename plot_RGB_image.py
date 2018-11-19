@@ -11,6 +11,17 @@ class ArchiveContentsWarning(ResourceWarning):
 print("Starting script...")
 
 DATA_PATH = "data"
+
+ARCHIVE_EXT = ".zip"
+
+TCI_FILE_KEYWORD = "TCI.jp2"
+RED_CHANNEL_KEYWORD = "B04.jp2"
+GREEN_CHANNEL_KEYWORD = "B03.jp2"
+BLUE_CHANNEL_KEYWORD = "B02.jp2"
+
+VALUE_THRESHOLD = 2000
+
+# Example dataset definition
 SAT_TYPE = "S2A"
 PROD_LEVEL = "MSIL1C"
 SENSING_START = "20181016T101021"
@@ -28,18 +39,10 @@ DATASET_NAME = "_".join([
         TIMESTAMP,
 ])
 #"S2A_MSIL1C_20181016T101021_N0206_R022_T33UVR_20181016T121930"
-ARCHIVE_EXT = ".zip"
 
-TCI_FILE_KEYWORD = "TCI.jp2"
-RED_CHANNEL_KEYWORD = "B04.jp2"
-GREEN_CHANNEL_KEYWORD = "B03.jp2"
-BLUE_CHANNEL_KEYWORD = "B02.jp2"
-
-VALUE_THRESHOLD = 2000
-
-IMAGE_PATH = ""
-
-ARCHIVE_PATH = os.path.join(DATA_PATH, DATASET_NAME + ARCHIVE_EXT)
+ARCHIVE_PATH = os.path.join(
+        DATA_PATH,
+        DATASET_NAME + ARCHIVE_EXT)
 
 def get_image_filename(archive, keyword=TCI_FILE_KEYWORD):
     image_file = None
@@ -51,11 +54,13 @@ def get_image_filename(archive, keyword=TCI_FILE_KEYWORD):
                 warnings.warn("Warning! More than one TCI file found!", ArchiveContentsWarning)
     return image_file
 
-def read_archive_file(image_filename, archive_path = ARCHIVE_PATH):
+
+def read_archive_file(image_filename,
+                      archive_path = ARCHIVE_PATH):
     # Based on https://geopyspark.readthedocs.io/en/latest/tutorials/reading-in-sentinel-data.html
-    with rasterio.open("zip://" + archive_path + "!" + image_filename) as f:
-        image = f.read(1)
-    return image
+    with rasterio.open("zip://" + archive_path +
+                       "!" + image_filename) as f:
+        return f.read(1)
 
 
 def get_rgb_from_archive(archive_path = ARCHIVE_PATH):
@@ -64,10 +69,17 @@ def get_rgb_from_archive(archive_path = ARCHIVE_PATH):
 
     archive = zipfile.ZipFile(archive_path)
 
-    tci_image_filename = get_image_filename(archive)
-    red_image_filename = get_image_filename(archive, RED_CHANNEL_KEYWORD)
-    green_image_filename = get_image_filename(archive, GREEN_CHANNEL_KEYWORD)
-    blue_image_filename = get_image_filename(archive, BLUE_CHANNEL_KEYWORD)
+    red_image_filename = get_image_filename(
+            archive,
+            RED_CHANNEL_KEYWORD)
+
+    green_image_filename = get_image_filename(
+            archive,
+            GREEN_CHANNEL_KEYWORD)
+
+    blue_image_filename = get_image_filename(
+            archive,
+            BLUE_CHANNEL_KEYWORD)
 
     print("Loading image...")
 
@@ -91,19 +103,21 @@ def get_rgb_from_archive(archive_path = ARCHIVE_PATH):
         color_image>VALUE_THRESHOLD,
         VALUE_THRESHOLD)
 
+    # scaling to 8-bit uints
     norm_factor = np.max(color_image) / 255
 
     # Processing row by row to save memory on conversion from int
     # to float due to division
     color_image = np.array(
-        [(row/norm_factor).astype(np.uint8) for row in color_image]
-    )
+        [(row/norm_factor).astype(np.uint8)
+                for row in color_image] )
 
     return color_image
 
-image = get_rgb_from_archive()
+if __name__ == "__main__":
+    image = get_rgb_from_archive()
 
-print("Plotting...")
-imgplot = plt.imshow(image)
-plt.show()
+    print("Plotting...")
+    imgplot = plt.imshow(image)
+    plt.show()
 
