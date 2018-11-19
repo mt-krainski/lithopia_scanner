@@ -41,6 +41,15 @@ def test_credentials(username, password):
     else:
         return False
 
+
+def request(uri):
+    credentials = get_credentials()
+    return requests.get(
+        uri,
+        auth=(credentials["username"],
+              credentials["password"]))
+
+
 if __name__ == "__main__":
 
     import argparse
