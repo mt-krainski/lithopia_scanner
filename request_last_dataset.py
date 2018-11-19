@@ -25,9 +25,11 @@ def request_sentinel_2_data(location):
 
 
 def get_data_link(entry):
-    href = entry['link'][0]['href']
-    title = entry['title']
-    return href, title + ARCHIVE_EXT
+    return entry['link'][0]['href']
+
+
+def get_data_name(entry):
+    return entry['title']
 
 
 def print_data_summary(entry):
@@ -71,10 +73,24 @@ def download_file(url, filename="temp.zip", filesize=None):
     return local_filename
 
 
-def download_if_not_present(url, filename, **kwargs):
-    if not path.isfile(filename):
-        download_file(url, filename, **kwargs)
+def download(entry, overwrite=False):
+    download_link = get_data_link(entry)
+    dataset_name = get_data_name(entry)
+    filesize = get_data_size(entry)
 
+    file_path = path.join(DATA_PATH, dataset_name+ARCHIVE_EXT)
+
+    file_exists = path.isfile(file_path)
+
+    if overwrite or not file_exists:
+        download_file(
+                download_link,
+                dataset_name,
+                filesize)
+    else:
+        print("File exists, skipping download...")
+
+    return dataset_name
 
 def format_size(size):
     #2**10 = 1024
@@ -89,9 +105,5 @@ def format_size(size):
 
 if __name__ == "__main__":
     response = request_sentinel_2_data(SAMPLE_LOCATION)
-
     entry = response.json()['feed']['entry'][0]
-
-    download_link = get_data_link(entry)
-
-    download_file(*download_link, filesize=get_data_size(entry))
+    dataset_name = download(entry)

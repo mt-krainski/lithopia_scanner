@@ -10,15 +10,16 @@ ARCHIVE_EXT = ".zip"
 
 print("Forming request...")
 response = request_last_dataset.request_sentinel_2_data(SAMPLE_LOCATION)
-entry = response.json()['feed']['entry'][0]
-download_link = request_last_dataset.get_data_link(entry)
 
-request_last_dataset.download_if_not_present(*download_link)
+if response.status_code == 200:
+    print("Request successful.")
+
+entry = response.json()['feed']['entry'][0]
+
+dataset_name = request_last_dataset.download(entry)
 
 archive_path = os.path.join(DATA_PATH,
-                            download_link[1])
-
-dataset_name = download_link[1].split('.')[0]
+                            dataset_name+ARCHIVE_EXT)
 
 image = plot_RGB_image.get_rgb_from_archive(archive_path)
 
