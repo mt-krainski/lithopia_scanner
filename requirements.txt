@@ -1,2 +1,5 @@
 geopyspark
-request
+requests
+numpy
+rasterio
+pyspark
