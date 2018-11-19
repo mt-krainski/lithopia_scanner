@@ -1,2 +1,4 @@
 .idea
 data/**
+.credentials.json
+saved_images/
