@@ -3,3 +3,5 @@ requests
 numpy
 rasterio
 pyspark
+resource
+matplotlib
