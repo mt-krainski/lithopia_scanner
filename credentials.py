@@ -5,6 +5,8 @@ import getpass
 SAMPLE_REQUEST = 'https://scihub.copernicus.eu/dhus/search?' \
              'q=footprint:"Intersects(41.9000, 12.5000)"'
 
+REGISTER_LINK = "https://scihub.copernicus.eu/dhus/#/self-registration"
+
 CREDENTIALS_FILE = ".credentials.json"
 
 def get_credentials():
@@ -59,17 +61,18 @@ if __name__ == "__main__":
         prog='Update credentials',
         description='Script to update credentials used for '
                     'downloading data from the '
-                    'Copernicus Open Access Hub')
+                    'Copernicus Open Access Hub. '
+                    'If you don\'t have an account yet, '
+                    'you can register here: '
+                    f'{REGISTER_LINK}')
 
     argument_parser.add_argument(
         '--username', '-u',
-        help="Your username"
-    )
+        help="Your username" )
 
     argument_parser.add_argument(
         '--password', '-p',
-        help="Your password"
-    )
+        help="Your password" )
 
     credentials = argument_parser.parse_args()
 

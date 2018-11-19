@@ -43,7 +43,7 @@ def get_data_size(entry):
 
 
 def download_file(url, filename="temp.zip", filesize=None):
-    local_filename = path.join(DATA_PATH, filename)
+    local_filename = path.join(DATA_PATH, filename+ARCHIVE_EXT)
     # NOTE the stream=True parameter
     print("Downloading file...")
     with credentials.request(url, stream=True) as r:
