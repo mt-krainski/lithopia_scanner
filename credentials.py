@@ -42,12 +42,13 @@ def test_credentials(username, password):
         return False
 
 
-def request(uri):
+def request(uri, **kwargs):
     credentials = get_credentials()
     return requests.get(
         uri,
         auth=(credentials["username"],
-              credentials["password"]))
+              credentials["password"]),
+        **kwargs)
 
 
 if __name__ == "__main__":

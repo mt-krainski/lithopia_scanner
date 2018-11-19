@@ -11,6 +11,7 @@ class ArchiveContentsWarning(ResourceWarning):
 print("Starting script...")
 
 DATA_PATH = "data"
+IMAGE_PATH = "saved_images"
 
 ARCHIVE_EXT = ".zip"
 
@@ -83,11 +84,11 @@ def get_rgb_from_archive(archive_path = ARCHIVE_PATH):
 
     print("Loading image...")
 
-    red_image = read_archive_file(red_image_filename)
+    red_image = read_archive_file(red_image_filename, archive_path)
     print("\tRED read")
-    green_image = read_archive_file(green_image_filename)
+    green_image = read_archive_file(green_image_filename, archive_path)
     print("\tGREEN read")
-    blue_image = read_archive_file(blue_image_filename)
+    blue_image = read_archive_file(blue_image_filename, archive_path)
     print("\tBLUE read")
 
     print("Composing RGB image...")
@@ -114,10 +115,19 @@ def get_rgb_from_archive(archive_path = ARCHIVE_PATH):
 
     return color_image
 
+
+def plot_and_save(image, dataset_name = DATASET_NAME):
+    fig = plt.figure(figsize=(25, 25), dpi=300)
+    plt.imshow(image)
+    fig.savefig(
+        os.path.join(IMAGE_PATH, f"{dataset_name}.png")
+    )
+    plt.close(fig)
+
 if __name__ == "__main__":
     image = get_rgb_from_archive()
 
     print("Plotting...")
-    imgplot = plt.imshow(image)
-    plt.show()
+
+    plot_and_save(image)
 
