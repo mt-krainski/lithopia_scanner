@@ -15,7 +15,7 @@ def get_credentials():
             credentials = json.load(cred_file)
     except (FileNotFoundError, PermissionError):
         print("File error! Have you created the "
-              "credentials with update_credentials.py?")
+              "credentials by running credentials.py?")
 
     return credentials
 
