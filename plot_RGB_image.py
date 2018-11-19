@@ -1,22 +1,14 @@
 import rasterio
-# import geopyspark as gps
 import numpy as np
 import zipfile
 import warnings
 import os
 import matplotlib.pyplot as plt
 
-from pyspark import SparkContext
-
 class ArchiveContentsWarning(ResourceWarning):
     pass
 
 print("Starting script...")
-
-# conf = gps.geopyspark_conf(
-#         master="local[*]",
-#         appName="sentinel-ingest-example")
-# pysc = SparkContext(conf=conf)
 
 DATA_PATH = "data"
 SAT_TYPE = "S2A"
@@ -42,6 +34,8 @@ TCI_FILE_KEYWORD = "TCI.jp2"
 RED_CHANNEL_KEYWORD = "B04.jp2"
 GREEN_CHANNEL_KEYWORD = "B03.jp2"
 BLUE_CHANNEL_KEYWORD = "B02.jp2"
+
+VALUE_THRESHOLD = 3000
 
 IMAGE_PATH = ""
 
@@ -74,10 +68,12 @@ def read_archive_file(image_filename, archive_path = ARCHIVE_PATH):
         image = f.read(1)
     return image
 
-tci_image = read_archive_file(tci_image_filename)
 red_image = read_archive_file(red_image_filename)
+print("\tRED read")
 green_image = read_archive_file(green_image_filename)
+print("\tGREEN read")
 blue_image = read_archive_file(blue_image_filename)
+print("\tBLUE read")
 
 print("Composing RGB image...")
 
@@ -85,11 +81,23 @@ color_image = np.stack(
         (red_image, green_image, blue_image),
         axis=2)
 
-color_image = color_image/max(color_image)
+del red_image, green_image, blue_image
+
+np.place(
+    color_image,
+    color_image>VALUE_THRESHOLD,
+    VALUE_THRESHOLD)
+
+norm_factor = np.max(color_image) / 255
+
+# Processing row by row to save memory on conversion from int
+# to float due to division
+color_image = np.array(
+    [(row/norm_factor).astype(np.uint8) for row in color_image]
+)
 
 print("Plotting...")
 imgplot = plt.imshow(color_image)
-# imgplot.set_cmap('gnuplot')
 plt.show()
 
 def read_zip_file(filepath):
