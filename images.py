@@ -11,9 +11,12 @@ from lxml import etree
 class ArchiveContentsWarning(ResourceWarning):
     pass
 
-Image.MAX_IMAGE_PIXELS = 1000000000
 
-print("Starting script...")
+class ImageOutOfBoundsException(Exception):
+    pass
+
+
+Image.MAX_IMAGE_PIXELS = 1000000000
 
 DATA_PATH = "data"
 IMAGE_PATH = "saved_images"
@@ -122,6 +125,7 @@ def get_rgb_from_archive(archive_path = ARCHIVE_PATH):
 
 
 def get_tci_image(archive_path = ARCHIVE_PATH):
+    print("Getting TCI image...")
     img = None
     with zipfile.ZipFile(archive_path) as archive:
         for entry in archive.infolist():
@@ -134,15 +138,24 @@ def get_tci_image(archive_path = ARCHIVE_PATH):
     return img
 
 
-def get_inspire_metadata(archive_path = ARCHIVE_PATH):
-    INSPIRE_FILENAME = "INSPIRE.xml"
-    inspire_file = None
+def read_xml_from_archive(archive_path, xml_filename):
+    xml_file = None
     with zipfile.ZipFile(archive_path) as archive:
         for entry in archive.infolist():
-            if INSPIRE_FILENAME == os.path.basename(entry.filename):
+            if xml_filename == os.path.basename(entry.filename):
                 with archive.open(entry) as file:
-                    inspire_file = etree.parse(file)
-    return inspire_file
+                    xml_file = etree.parse(file)
+    return xml_file
+
+
+def get_inspire_metadata(archive_path = ARCHIVE_PATH):
+    INSPIRE_FILENAME = "INSPIRE.xml"
+    return read_xml_from_archive(archive_path, INSPIRE_FILENAME)
+
+
+def get_manifest(archive_path = ARCHIVE_PATH):
+    MANIFEST_FILENAME = 'manifest.safe'
+    return read_xml_from_archive(archive_path, MANIFEST_FILENAME)
 
 
 def get_namespaces_from_xml(xml_file):
@@ -163,16 +176,30 @@ def get_bounding_box(inspire_xml):
 
     limits = {}
 
-    nsmap = get_namespaces_from_xml(inspire_xml)
+    inspire_root = inspire_xml.getroot()
 
-    bounding_box = inspire_xml.xpath(
-            f"//{BOUNDING_BOX_ELEMENT}", namespaces=nsmap)[0]
+    bounding_box = inspire_root.xpath(
+            f"//{BOUNDING_BOX_ELEMENT}", namespaces=inspire_root.nsmap)[0]
 
     for element_id in ELEMENTS:
-        element = bounding_box.find(ELEMENTS[element_id], namespaces=nsmap)
-        limits[element_id] = float(element.find(VALUE_ELEMENT, namespaces=nsmap).text)
+        element = bounding_box.find(ELEMENTS[element_id], namespaces=inspire_root.nsmap)
+        limits[element_id] = float(element.find(VALUE_ELEMENT, namespaces=inspire_root.nsmap).text)
 
     return limits
+
+
+def get_coordinates(manifest_xml):
+    COORDINATES_TAG = "gml:coordinates"
+
+    manifest_root = manifest_xml.getroot()
+
+    coordinates = manifest_xml.xpath(f"//{COORDINATES_TAG}/text()", namespaces=manifest_root.nsmap)[0]
+
+    coordinates_float = [float(x) for x in coordinates.strip().split(" ")]
+
+    coordinates_mapped = [coordinates_float[1::2], coordinates_float[0::2]]
+
+    return coordinates_mapped
 
 
 def plot_and_save(image, dataset_name = DATASET_NAME, limits = None):
@@ -180,7 +207,7 @@ def plot_and_save(image, dataset_name = DATASET_NAME, limits = None):
 
     if limits is not None:
         plt.imshow(image, extent=[
-                limits["east"], limits["west"],
+                limits["west"], limits["east"],
                 limits["south"], limits["north"]
             ], aspect="auto")
     else:
@@ -190,11 +217,61 @@ def plot_and_save(image, dataset_name = DATASET_NAME, limits = None):
     )
     plt.close(fig)
 
+
+def get_ratio(limits, value):
+    return (value-min(limits))/abs(limits[0] - limits[1])
+
+
+def crop(image, bounding_box, crop_bounding_box):
+    if bounding_box["east"] < crop_bounding_box["east"] or \
+            bounding_box["west"] > crop_bounding_box["west"] or \
+            bounding_box["south"] > crop_bounding_box["south"] or \
+            bounding_box["north"] < crop_bounding_box["north"]:
+        raise ImageOutOfBoundsException("Requested bounding box is outside of image bounds")
+    cutout_percent = {
+        "east" : get_ratio((bounding_box["east"], bounding_box["west"]), crop_bounding_box["east"]),
+        "west": get_ratio((bounding_box["east"], bounding_box["west"]), crop_bounding_box["west"]),
+        "north": 1.0 - get_ratio((bounding_box["north"], bounding_box["south"]), crop_bounding_box["north"]), ## images are indexed from top
+        "south": 1.0 - get_ratio((bounding_box["north"], bounding_box["south"]), crop_bounding_box["south"]),
+    }
+    print(cutout_percent)
+    cutout_pixel = {}
+    width, height = image.size
+    if cutout_percent["east"] < cutout_percent["west"]:
+        cutout_pixel["left"] = int(np.floor(cutout_percent["east"] * width))
+        cutout_pixel["right"] = int(np.ceil(cutout_percent["west"] * width))
+    else:
+        cutout_pixel["right"] = int(np.ceil(cutout_percent["east"] * width))
+        cutout_pixel["left"] = int(np.floor(cutout_percent["west"] * width))
+    if cutout_percent["south"] < cutout_percent["north"]:
+        cutout_pixel["upper"] = int(np.ceil(cutout_percent["north"] * height))
+        cutout_pixel["lower"] = int(np.floor(cutout_percent["south"] * height))
+    else:
+        cutout_pixel["lower"] = int(np.floor(cutout_percent["north"] * height))
+        cutout_pixel["upper"] = int(np.ceil(cutout_percent["south"] * height))
+    print(cutout_pixel)
+    crop_result = image.crop((
+        cutout_pixel["left"],
+        cutout_pixel["lower"],
+        cutout_pixel["right"],
+        cutout_pixel["upper"],
+    ))
+    return crop_result
+
+
 if __name__ == "__main__":
+    print("Starting script...")
     image = get_tci_image()
-    limits = get_bounding_box(get_inspire_metadata())
+    bounding_box = get_bounding_box(get_inspire_metadata())
 
     print("Plotting...")
 
-    plot_and_save(image, limits = limits)
+    plot_and_save(image, limits = bounding_box)
 
+
+    TEST_CUTOUT_BOX = {
+        'east': 14.357152,
+        'north' : 50.055195,
+        'west' : 14.314761,
+        'south' : 50.024767
+    }
