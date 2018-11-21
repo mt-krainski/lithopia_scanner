@@ -4,6 +4,8 @@ from sys import stdout
 
 SAMPLE_LOCATION = (50.083333, 14.416667) # Prague
 
+# SAMPLE_LOCATION = (52.218978, 4.419296) # estec
+
 MASTER_URI = "https://scihub.copernicus.eu/dhus/search?"
 
 PLATFORM_NAME = "Sentinel-2"
@@ -14,7 +16,7 @@ ARCHIVE_EXT = ".zip"
 
 
 def get_latest(location):
-    request_uri = f"{MASTER_URI}start=0&rows=10&" \
+    request_uri = f"{MASTER_URI}start=0&rows=50&" \
                   f"q=footprint:\"Intersects({location[0]}, {location[1]})\" AND " \
                   f"platformname:{PLATFORM_NAME} AND " \
                   f"producttype: {PRODUCT_TYPE}&" \
@@ -22,6 +24,20 @@ def get_latest(location):
                   f"format=json"
     response = credentials.request(request_uri)
     return response
+
+
+def get_latest_with_cloud_limit(entries, cloudcoverpercentage_limit = 10.0):
+    cloud_cover_percentage_variable_name = "cloudcoverpercentage"
+    for entry in entries:
+        if type(entry['double']) is list:
+            for item in entry['double']:
+                if item['name'] == cloud_cover_percentage_variable_name:
+                    if float(item['content']) < cloudcoverpercentage_limit:
+                        return entry
+        elif type(entry['double']) is dict:
+            if entry['double']['name'] == cloud_cover_percentage_variable_name:
+                if float(entry['double']['content']) < cloudcoverpercentage_limit:
+                    return entry
 
 
 def get_data_link(entry):

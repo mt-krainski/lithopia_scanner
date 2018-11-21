@@ -203,17 +203,32 @@ def get_coordinates(manifest_xml):
 
 
 def plot_and_save(image, dataset_name = DATASET_NAME, limits = None):
+
     fig = plt.figure(figsize=(10, 10), dpi=300)
 
     if limits is not None:
         plt.imshow(image, extent=[
-                limits["west"], limits["east"],
-                limits["south"], limits["north"]
-            ], aspect="auto")
+            limits["west"], limits["east"],
+            limits["south"], limits["north"]
+        ], aspect="auto")
     else:
         plt.imshow(image)
+        plt.gca().set_axis_off()
+        plt.subplots_adjust(top=1, bottom=0, right=1, left=0,
+                        hspace=0, wspace=0)
+        plt.margins(0, 0)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+        # Stores the image in full resolution
+        # plt.imsave(
+        #     os.path.join(IMAGE_PATH, f"{dataset_name}.png"),
+        #     image,
+        #     format='png')
+
     fig.savefig(
-        os.path.join(IMAGE_PATH, f"{dataset_name}.png")
+        os.path.join(IMAGE_PATH, f"{dataset_name}.png"),
+        bbox_inches="tight"
     )
     plt.close(fig)
 

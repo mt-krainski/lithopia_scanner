@@ -2,11 +2,13 @@ import images
 import matplotlib.pyplot as plt
 import numpy as np
 
-ARCHIVE = "data/S2A_MSIL1C_20181016T101021_N0206_R022_T33UVR_20181016T121930.zip"
+ARCHIVE = "data/S2A_MSIL1C_20181111T103241_N0207_R108_T31UGP_20181111T110239.zip"
 
 image = images.get_tci_image(ARCHIVE)
 coords = images.get_coordinates(images.get_manifest(ARCHIVE))
 print(coords)
+
+SAMPLE_LOCATION = (50.083333, 14.416667)
 
 proper_image = None
 
@@ -42,18 +44,18 @@ T = transformed_vertices.dot(np.linalg.pinv(vertices))
 
 print(T)
 
-# plt.plot(vertices[0, :], vertices[1, :], 'o-')
-# plt.plot(transformed_vertices[0, :], transformed_vertices[1, :], 'o-')
-# plt.plot(T.dot(vertices)[0, :], T.dot(vertices)[1, :], 'o-')
-# plt.show()
+plt.plot(vertices[0, :], vertices[1, :], 'o-')
+plt.plot(transformed_vertices[0, :], transformed_vertices[1, :], 'o-')
+plt.plot(T.dot(vertices)[0, :], T.dot(vertices)[1, :], 'o-')
+plt.show()
 
 print(T.dot(vertices))
 
 TEST_CUTOUT_BOX = {
-        'east': 14.493255,
-        'north' : 50.150429,
-        'west' : 14.334997,
-        'south' : 50.028489
+        'east': SAMPLE_LOCATION[1] + 0.1,
+        'north' : SAMPLE_LOCATION[0] + 0.1,
+        'west' : SAMPLE_LOCATION[1] - 0.1,
+        'south' : SAMPLE_LOCATION[0] - 0.1
     }
 
 crop_vertices = np.array((
