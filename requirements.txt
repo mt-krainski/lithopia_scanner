@@ -4,3 +4,4 @@ rasterio
 pyspark
 resource
 matplotlib
+pillow
