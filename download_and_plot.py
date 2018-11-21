@@ -9,7 +9,7 @@ IMAGE_PATH = "saved_images"
 ARCHIVE_EXT = ".zip"
 
 print("Forming request...")
-response = sentinel_requests.request_sentinel_2_data(SAMPLE_LOCATION)
+response = sentinel_requests.get_latest(SAMPLE_LOCATION)
 
 if response.status_code == 200:
     print("Request successful.")

@@ -13,7 +13,7 @@ DATA_PATH = "data"
 ARCHIVE_EXT = ".zip"
 
 
-def request_sentinel_2_data(location):
+def get_latest(location):
     request_uri = f"{MASTER_URI}start=0&rows=10&" \
                   f"q=footprint:\"Intersects({location[0]}, {location[1]})\" AND " \
                   f"platformname:{PLATFORM_NAME} AND " \
@@ -104,6 +104,6 @@ def format_size(size):
 
 
 if __name__ == "__main__":
-    response = request_sentinel_2_data(SAMPLE_LOCATION)
+    response = get_latest(SAMPLE_LOCATION)
     entry = response.json()['feed']['entry'][0]
     dataset_name = download(entry)
