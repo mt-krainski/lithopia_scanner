@@ -21,7 +21,7 @@ dataset_name = request_last_dataset.download(entry)
 archive_path = os.path.join(DATA_PATH,
                             dataset_name+ARCHIVE_EXT)
 
-image = plot_RGB_image.get_rgb_from_archive(archive_path)
+image = plot_RGB_image.get_tci_image(archive_path)
 
 print("Plotting...")
 plot_RGB_image.plot_and_save(image, dataset_name)

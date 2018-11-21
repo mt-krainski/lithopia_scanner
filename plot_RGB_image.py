@@ -6,9 +6,12 @@ import os
 import matplotlib.pyplot as plt
 from PIL import Image
 from io import BytesIO
+from lxml import etree
 
 class ArchiveContentsWarning(ResourceWarning):
     pass
+
+Image.MAX_IMAGE_PIXELS = 1000000000
 
 print("Starting script...")
 
@@ -123,27 +126,75 @@ def get_tci_image(archive_path = ARCHIVE_PATH):
     with zipfile.ZipFile(archive_path) as archive:
         for entry in archive.infolist():
             if TCI_FILE_KEYWORD in entry.filename:
-                print(entry.filename)
                 # with archive.open(entry) as file:
                 image_data = archive.read(entry)
                 fh = BytesIO(image_data)
                 img = Image.open(fh)
-                print(img.size, img.mode, len(img.getdata()))
+                break
     return img
 
 
-def plot_and_save(image, dataset_name = DATASET_NAME):
-    fig = plt.figure(figsize=(25, 25), dpi=300)
-    plt.imshow(image)
+def get_inspire_metadata(archive_path = ARCHIVE_PATH):
+    INSPIRE_FILENAME = "INSPIRE.xml"
+    inspire_file = None
+    with zipfile.ZipFile(archive_path) as archive:
+        for entry in archive.infolist():
+            if INSPIRE_FILENAME == os.path.basename(entry.filename):
+                with archive.open(entry) as file:
+                    inspire_file = etree.parse(file)
+    return inspire_file
+
+
+def get_namespaces_from_xml(xml_file):
+    nsmap = {}
+    for ns in xml_file.xpath('//namespace::*'):
+        if ns[0]:  # Removes the None namespace, neither needed nor supported.
+            nsmap[ns[0]] = ns[1]
+    return nsmap
+
+
+def get_bounding_box(inspire_xml):
+    BOUNDING_BOX_ELEMENT = "gmd:EX_GeographicBoundingBox"
+    ELEMENTS = {"west"  : "gmd:westBoundLongitude",
+                "east"  : "gmd:eastBoundLongitude",
+                "north" : "gmd:northBoundLatitude",
+                "south" : "gmd:southBoundLatitude"}
+    VALUE_ELEMENT = "gco:Decimal"
+
+    limits = {}
+
+    nsmap = get_namespaces_from_xml(inspire_xml)
+
+    bounding_box = inspire_xml.xpath(
+            f"//{BOUNDING_BOX_ELEMENT}", namespaces=nsmap)[0]
+
+    for element_id in ELEMENTS:
+        element = bounding_box.find(ELEMENTS[element_id], namespaces=nsmap)
+        limits[element_id] = float(element.find(VALUE_ELEMENT, namespaces=nsmap).text)
+
+    return limits
+
+
+def plot_and_save(image, dataset_name = DATASET_NAME, limits = None):
+    fig = plt.figure(figsize=(10, 10), dpi=300)
+
+    if limits is not None:
+        plt.imshow(image, extent=[
+                limits["east"], limits["west"],
+                limits["south"], limits["north"]
+            ], aspect="auto")
+    else:
+        plt.imshow(image)
     fig.savefig(
         os.path.join(IMAGE_PATH, f"{dataset_name}.png")
     )
     plt.close(fig)
 
 if __name__ == "__main__":
-    image = get_rgb_from_archive()
+    image = get_tci_image()
+    limits = get_bounding_box(get_inspire_metadata())
 
     print("Plotting...")
 
-    plot_and_save(image)
+    plot_and_save(image, limits = limits)
 
