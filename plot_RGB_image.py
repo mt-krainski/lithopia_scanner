@@ -4,6 +4,8 @@ import zipfile
 import warnings
 import os
 import matplotlib.pyplot as plt
+from PIL import Image
+from io import BytesIO
 
 class ArchiveContentsWarning(ResourceWarning):
     pass
@@ -114,6 +116,20 @@ def get_rgb_from_archive(archive_path = ARCHIVE_PATH):
                 for row in color_image] )
 
     return color_image
+
+
+def get_tci_image(archive_path = ARCHIVE_PATH):
+    img = None
+    with zipfile.ZipFile(archive_path) as archive:
+        for entry in archive.infolist():
+            if TCI_FILE_KEYWORD in entry.filename:
+                print(entry.filename)
+                # with archive.open(entry) as file:
+                image_data = archive.read(entry)
+                fh = BytesIO(image_data)
+                img = Image.open(fh)
+                print(img.size, img.mode, len(img.getdata()))
+    return img
 
 
 def plot_and_save(image, dataset_name = DATASET_NAME):

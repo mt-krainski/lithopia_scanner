@@ -14,3 +14,4 @@ Application for the Lithopia project, which extracts latest Sentinel-2 image for
 *note: Development was done on Windows 10 and that's the system to which the installation notes apply*
 
 - [rasterio](https://rasterio.readthedocs.io/en/latest/index.html) - *Also needed to be installed manually from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio) and required GDAL, which can be found [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)*
+- [pillow](https://pillow.readthedocs.io/en/5.2.x/handbook/image-file-formats.html#jpeg-2000) is used to read JPEG2000 data. It uses OpenJPEG
