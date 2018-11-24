@@ -39,9 +39,6 @@ def evaluate_transform(x, *args):
 
     T = np.array([x[0:3], x[3:6], np.append(x[6:8], 1)])
 
-    print("T")
-    print(T)
-
     transformed_coordinates = T.dot(image_coordinates)
 
     for col in range(transformed_coordinates.shape[1]):
@@ -59,7 +56,133 @@ def evaluate_transform(x, *args):
     return score
 
 
-ARCHIVE = "data/S2B_MSIL1C_20181018T100029_N0206_R122_T34UCF_20181018T120913.zip"
+
+def scan_by_column(image_pixels,
+                   scan_range,
+                   row_id,
+                   image_boundries,
+                   pixel = (0, 0, 0), _=None):
+
+    for col in scan_range:
+        if image_pixels[col, row_id] != pixel:
+            if (col, row_id) not in image_boundries:
+                image_boundries.append((col, row_id))
+            break
+
+
+def scan_by_row(image_pixels,
+                scan_range,
+                col_id,
+                image_boundries,
+                pixel = (0, 0, 0), _=None):
+
+    for row in scan_range:
+        if image_pixels[col_id, row] != pixel:
+            if (col_id, row) not in image_boundries:
+                image_boundries.append((col_id, row))
+            break
+
+
+def scan_by(image_pixels,
+            scan_range,
+            row_col_id,
+            image_boundries,
+            pixel = (0, 0, 0),
+            by = 'row'):
+
+    for row_col in scan_range:
+        if by == 'row':
+            indexes = (row_col_id, row_col)
+        elif by == 'col':
+            indexes = (row_col, row_col_id)
+        else:
+            raise ValueError("by can be either 'row' or 'col'!")
+
+        if image_pixels[indexes] != pixel:
+            if indexes not in image_boundries:
+                image_boundries.append(indexes)
+            break
+
+    # for row in scan_range:
+    #     if image_pixels[col_id, row] != pixel:
+    #         if (col_id, row) not in image_boundries:
+    #             image_boundries.append((col_id, row))
+    #         break
+    #
+    # for col in scan_range:
+    #     if image_pixels[col, row_id] != pixel:
+    #         if (col, row_id) not in image_boundries:
+    #             image_boundries.append((col, row_id))
+    #         break
+
+
+def get_image_boundries(image_pixels, image_size):
+    image_boundries = []
+
+    row_zero = 0
+    row_last = image_size[0]-1
+    row_sequence = range(image_size[0])
+    row_sequence_rev = range(image_size[0] - 1, -1, -1)
+
+    col_zero = 0
+    col_last = image_size[1] - 1
+    col_sequence = range(image_size[1])
+    col_sequence_rev = range(image_size[1] - 1, -1, -1)
+
+    nan_pixel = (0, 0, 0)
+
+    param_seq = [
+        {'seq': col_sequence_rev, 'id': row_last, 'by': 'col'},
+        {'seq': row_sequence_rev, 'id': col_last, 'by': 'row'},
+        {'seq': row_sequence, 'id': col_last, 'by': 'row'},
+        {'seq': col_sequence_rev, 'id': row_zero, 'by': 'col'},
+        {'seq': col_sequence, 'id': row_zero, 'by': 'col'},
+        {'seq': row_sequence, 'id': col_zero, 'by': 'row'},
+        {'seq': row_sequence_rev, 'id': col_zero, 'by': 'row'},
+        {'seq': col_sequence, 'id': row_last, 'by': 'col'},
+    ]
+
+    for param in param_seq:
+        scan_by(image_pixels, param['seq'], param['id'],
+                image_boundries, nan_pixel, param['by'])
+
+    # # right down
+    # scan_by(image_pixels, col_sequence_rev,
+    #         row_last, image_boundries, nan_pixel, 'col')
+    #
+    # # down right
+    # scan_by(image_pixels, row_sequence_rev,
+    #         col_last, image_boundries, nan_pixel, 'row')
+    #
+    # # up right
+    # scan_by(image_pixels, row_sequence,
+    #         col_last, image_boundries, nan_pixel, 'row')
+    #
+    # # right up
+    # scan_by(image_pixels, col_sequence_rev,
+    #         row_zero, image_boundries, nan_pixel, 'col')
+
+    # # left up
+    # scan_by(image_pixels, col_sequence,
+    #         row_zero, image_boundries, nan_pixel, 'col')
+
+    # # up left
+    # scan_by(image_pixels, row_sequence,
+    #         col_zero, image_boundries, nan_pixel, 'row')
+
+    # # down left
+    # scan_by(image_pixels, row_sequence_rev,
+    #         col_zero, image_boundries, nan_pixel, 'row')
+
+    # # left down
+    # scan_by(image_pixels, col_sequence,
+    #         row_last, image_boundries, nan_pixel, 'col')
+
+    return np.vstack((np.array(image_boundries).transpose(),
+                      len(image_boundries)*[1]))
+
+
+ARCHIVE = "data/S2A_MSIL1C_20181022T103051_N0206_R108_T31UGP_20181022T124230.zip"
 
 image = images.get_tci_image(ARCHIVE)
 coords = images.get_coordinates(images.get_manifest(ARCHIVE))
@@ -69,84 +192,14 @@ vertices = np.array([coords[0][:-1],
 
 image_pixels = image.load()
 
-
-def scan_by_column(scan_range, row_id, image_boundries, nan_pixel = (0, 0, 0)):
-
-    for col in scan_range:
-        if image_pixels[col, row_id] != nan_pixel:
-            if (col, row_id) not in image_boundries:
-                image_boundries.append((col, row_id))
-            break
-
-
-def get_image_boundries(image_pixels, image_size):
-    image_boundries = []
-    row_zero = 0
-    row_last = image_size[0]-1
-    nan_pixel = (0, 0, 0)
-
-    for col in range(image_size[1]):
-        if image_pixels[col, row_zero] != nan_pixel:
-            if (col, row_zero) not in image_boundries:
-                image_boundries.append((col, row_zero))
-            break
-
-    for col in range(image_size[1]):
-        if image_pixels[col, row_last] != nan_pixel:
-            if (col, row_last) not in image_boundries:
-                image_boundries.append((col, row_last))
-            break
-
-    for col in range(image_size[1]-1, -1, -1):
-        if image_pixels[col, row_zero] != nan_pixel:
-            if (col, row_zero) not in image_boundries:
-                image_boundries.append((col, row_zero))
-            break
-
-    for col in range(image_size[1]-1, -1, -1):
-        if image_pixels[col, row_last] != nan_pixel:
-            if (col, row_last) not in image_boundries:
-                image_boundries.append((col, row_last))
-            break
-
-    col_zero = 0
-    col_last = image_size[1]-1
-
-    for row in range(image_size[0]):
-        if image_pixels[col_zero, row] != nan_pixel:
-            if (col_zero, row) not in image_boundries:
-                image_boundries.append((col_zero, row))
-            break
-
-    for row in range(image_size[0]):
-        if image_pixels[col_last, row] != nan_pixel:
-            if (col_last, row) not in image_boundries:
-                image_boundries.append((col_last, row))
-            break
-
-    for row in range(image_size[0]-1, -1, -1):
-        if image_pixels[col_zero, row] != nan_pixel:
-            if (col_zero, row) not in image_boundries:
-                image_boundries.append((col_zero, row))
-            break
-
-    for row in range(image_size[0]-1, -1, -1):
-        if image_pixels[col_last, row] != nan_pixel:
-            if (col_last, row) not in image_boundries:
-                image_boundries.append((col_last, row))
-            break
-
-    return np.vstack((np.array(image_boundries).transpose(), len(image_boundries)*[1]))
-
-
-image_boundries = get_image_boundries(image_pixels, image.size)
+image_boundaries = get_image_boundries(image_pixels, image.size)
 
 plt.imshow(image)
-plt.plot(image_boundries[0, :], image_boundries[1, :], 'o')
+plt.plot(image_boundaries[0, :], image_boundaries[1, :], 'o')
 plt.show()
 
 print(vertices)
-print(image_boundries)
+print(image_boundaries)
 
 zero_node = [min(vertices[0, :]), max(vertices[1, :])]
 
@@ -166,34 +219,17 @@ T_scale = np.array([[scaling[0], 0, 0],
                     [0, 0, 1]])
 
 plt.plot(T_scale.dot(vert_zero)[0, :], T_scale.dot(vert_zero)[1, :], 'o-')
-plt.plot(image_boundries[0, :], image_boundries[1, :], 'o-')
+plt.plot(image_boundaries[0, :], image_boundaries[1, :], 'o-')
 plt.show()
 
 T_initial = T_scale.dot(T_zero)
-
-methods = [
-    'Nelder-Mead',
-    'Powell',
-    'CG',
-    'BFGS',
-    'Newton-CG',
-    'L-BFGS-B',
-    'TNC',
-    'COBYLA',
-    'SLSQP',
-    'trust-constr',
-    'dogleg',
-    'trust-ncg',
-    'trust-exact',
-    'trust-krylov'
-]
 
 results = {}
 
 method = 'BFGS'
 
 print("image_boundries")
-print(image_boundries)
+print(image_boundaries)
 
 print("vertices")
 print(vertices)
@@ -204,7 +240,7 @@ res = optimize.minimize(
     np.array([T_initial[0, 0], T_initial[0, 1], T_initial[0, 2],
               T_initial[1, 0], T_initial[1, 1], T_initial[1, 2],
               T_initial[2, 0], T_initial[2, 1]]),
-    args=(image_boundries, vertices),
+    args=(image_boundaries, vertices),
     method=method
 )
 
@@ -238,7 +274,7 @@ for col in range(transformed_coordinates.shape[1]):
 print("transformed_coordinates (normalized):")
 print(transformed_coordinates)
 
-plt.plot(image_boundries[0, :], image_boundries[1, :], 'o-')
+plt.plot(image_boundaries[0, :], image_boundaries[1, :], 'o-')
 plt.plot(transformed_coordinates[0, :], transformed_coordinates[1, :], 'o-')
 # plt.plot(transformed_vertices[0, :], transformed_vertices[1, :], 'o-')
 # plt.plot(T.dot(vertices)[0, :], T.dot(vertices)[1, :], 'o-')
