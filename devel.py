@@ -56,33 +56,6 @@ def evaluate_transform(x, *args):
     return score
 
 
-
-def scan_by_column(image_pixels,
-                   scan_range,
-                   row_id,
-                   image_boundries,
-                   pixel = (0, 0, 0), _=None):
-
-    for col in scan_range:
-        if image_pixels[col, row_id] != pixel:
-            if (col, row_id) not in image_boundries:
-                image_boundries.append((col, row_id))
-            break
-
-
-def scan_by_row(image_pixels,
-                scan_range,
-                col_id,
-                image_boundries,
-                pixel = (0, 0, 0), _=None):
-
-    for row in scan_range:
-        if image_pixels[col_id, row] != pixel:
-            if (col_id, row) not in image_boundries:
-                image_boundries.append((col_id, row))
-            break
-
-
 def scan_by(image_pixels,
             scan_range,
             row_col_id,
@@ -102,18 +75,6 @@ def scan_by(image_pixels,
             if indexes not in image_boundries:
                 image_boundries.append(indexes)
             break
-
-    # for row in scan_range:
-    #     if image_pixels[col_id, row] != pixel:
-    #         if (col_id, row) not in image_boundries:
-    #             image_boundries.append((col_id, row))
-    #         break
-    #
-    # for col in scan_range:
-    #     if image_pixels[col, row_id] != pixel:
-    #         if (col, row_id) not in image_boundries:
-    #             image_boundries.append((col, row_id))
-    #         break
 
 
 def get_image_boundries(image_pixels, image_size):
@@ -145,38 +106,6 @@ def get_image_boundries(image_pixels, image_size):
     for param in param_seq:
         scan_by(image_pixels, param['seq'], param['id'],
                 image_boundries, nan_pixel, param['by'])
-
-    # # right down
-    # scan_by(image_pixels, col_sequence_rev,
-    #         row_last, image_boundries, nan_pixel, 'col')
-    #
-    # # down right
-    # scan_by(image_pixels, row_sequence_rev,
-    #         col_last, image_boundries, nan_pixel, 'row')
-    #
-    # # up right
-    # scan_by(image_pixels, row_sequence,
-    #         col_last, image_boundries, nan_pixel, 'row')
-    #
-    # # right up
-    # scan_by(image_pixels, col_sequence_rev,
-    #         row_zero, image_boundries, nan_pixel, 'col')
-
-    # # left up
-    # scan_by(image_pixels, col_sequence,
-    #         row_zero, image_boundries, nan_pixel, 'col')
-
-    # # up left
-    # scan_by(image_pixels, row_sequence,
-    #         col_zero, image_boundries, nan_pixel, 'row')
-
-    # # down left
-    # scan_by(image_pixels, row_sequence_rev,
-    #         col_zero, image_boundries, nan_pixel, 'row')
-
-    # # left down
-    # scan_by(image_pixels, col_sequence,
-    #         row_last, image_boundries, nan_pixel, 'col')
 
     return np.vstack((np.array(image_boundries).transpose(),
                       len(image_boundries)*[1]))
