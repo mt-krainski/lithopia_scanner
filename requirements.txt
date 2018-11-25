@@ -8,3 +8,4 @@ pillow
 lxml
 scipy
 scikit-image
+beautifulsoup4
