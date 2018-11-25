@@ -61,9 +61,20 @@ def evaluate_transform(x, *args):
 def scan_by(image_pixels,
             scan_range,
             row_col_id,
-            image_boundries,
+            matched_pixels,
             pixel = (0, 0, 0),
             by = 'row'):
+    """
+    scans by row or column in a single column or row to find a matching pixel
+    :param image_pixels: pixels of an image as returned by pillows' load method
+    :param scan_range: range on which to perform the search
+    :param row_col_id: id of the row/column on which the search is to be performed
+    :param matched_pixels: list to which matched pixels are appended
+    :param pixel: pixel which is to be found
+    :param by: 'row' or 'col', indicates whether the search should be performed
+        by row, on a fixed column or by column on a fixed row
+    :return: results are appended to the matched_pixels list
+    """
 
     for row_col in scan_range:
         if by == 'row':
@@ -74,8 +85,8 @@ def scan_by(image_pixels,
             raise ValueError("by can be either 'row' or 'col'!")
 
         if image_pixels[indexes] != pixel:
-            if indexes not in image_boundries:
-                image_boundries.append(indexes)
+            if indexes not in matched_pixels:
+                matched_pixels.append(indexes)
             break
 
 
@@ -123,15 +134,34 @@ def get_image_boundries(image, image_size):
         for corner in corners:
             image_boundries.append([corner[1], corner[0]])
 
-    return np.vstack((np.array(image_boundries).transpose(),
-                      len(image_boundries)*[1]))
+    return np.array(image_boundries).transpose().tolist()
 
 
-def find_transform(coords, image_boundaries):
+def find_transform(coords, target_coords):
+    """
+    Finds the best matching transformation from coords to
+        image_boundaries
+    :param coords: coordinates to be transformed. They should be
+        in a format returned by images.get_coordinates, i.e. a list,
+        first element of which is a list of longitudes, second element
+        is a list of latitudes:
+        [[lon1, lon2, ..., lonN], [lat1, lat2, ..., latN]]
+    :param target_coords: target coordinates. a list, first
+        element of which is a list of longitudes, second element
+        is a list of latitudes:
+        [[lon1, lon2, ..., lonN], [lat1, lat2, ..., latN]]
+    :return: best match transformation matrix transforming from coords
+        space to target_coords space
+    """
 
     vertices = np.array([coords[0][:-1],
                          coords[1][:-1],
                          (len(coords[0]) - 1) * [1]])
+
+    target_vertices = np.array([
+        target_coords[0],
+        target_coords[1],
+        len(target_coords[0]) * [1]])
 
     zero_node = [min(vertices[0, :]), max(vertices[1, :])]
 
@@ -143,8 +173,8 @@ def find_transform(coords, image_boundaries):
 
     vertices_range = np.max(vert_zero, axis=1) - np.min(vert_zero, axis=1)
 
-    scale = [max(image_boundaries[0, :]) - min(image_boundaries[0, :]),
-             max(image_boundaries[1, :]) - min(image_boundaries[1, :])]
+    scale = [max(target_vertices[0, :]) - min(target_vertices[0, :]),
+             max(target_vertices[1, :]) - min(target_vertices[1, :])]
 
     scaling = [scale[0] / vertices_range[0],
                scale[1] / vertices_range[1]]
@@ -155,21 +185,18 @@ def find_transform(coords, image_boundaries):
 
     vert_scaled = t_scale.dot(vert_zero)
 
-    t_translate = np.array([[1, 0, min(image_boundaries[0,:])-min(vert_scaled[0,:])],
-                            [0, 1, min(image_boundaries[1,:])-min(vert_scaled[1,:])],
+    t_translate = np.array([[1, 0, min(target_vertices[0, :]) - min(vert_scaled[0, :])],
+                            [0, 1, min(target_vertices[1, :]) - min(vert_scaled[1, :])],
                             [0, 0, 1]])
 
     t_initial = t_translate.dot(t_scale.dot(t_zero))
-
-    method = 'BFGS'
 
     res = optimize.minimize(
         evaluate_transform,
         np.array([t_initial[0, 0], t_initial[0, 1], t_initial[0, 2],
                   t_initial[1, 0], t_initial[1, 1], t_initial[1, 2],
                   t_initial[2, 0], t_initial[2, 1]]),
-        args=(image_boundaries, vertices),
-        method=method
+        args=(target_vertices, vertices)
     )
 
     t_final = np.array([res.x[0:3], res.x[3:6], np.append(res.x[6:8], 1)])
@@ -185,7 +212,8 @@ def projection_transform(coords, transform):
     :param coords: coordinates to be transformed. They should be
         in a format returned by images.get_coordinates, i.e. a list,
         first element of which is a list of longitudes, second element
-        is a list of latitudes
+        is a list of latitudes:
+        [[lon1, lon2, ..., lonN], [lat1, lat2, ..., latN]]
     :param transform: transformation matrix
     :return: transformed coords in the same format as input
     """
@@ -223,11 +251,13 @@ def get_transform_function(image, coords):
     def transform(points):
         """
         Transforms points from geographical coordinates
-            to pixel coordinates
+            to pixel coordinates. This stores the transformation matrix
+            in a closure
         :param points: coordinates to be transformed. They should be
             in a format returned by images.get_coordinates, i.e. a list,
             first element of which is a list of longitudes, second element
-            is a list of latitudes
+            is a list of latitudes:
+            [[lon1, lon2, ..., lonN], [lat1, lat2, ..., latN]]
         :return: transformed points in the same format as input
         """
         return projection_transform(points, t_matrix)
@@ -245,7 +275,9 @@ if __name__ == "__main__":
     transformed_coordinates = to_pixel_coords(coords)
 
     plt.imshow(image)
-    plt.plot(transformed_coordinates[0], transformed_coordinates[1], 'o-', color='red')
+    plt.plot(transformed_coordinates[0],
+             transformed_coordinates[1],
+             'o-', color='red')
     plt.show()
 
 
