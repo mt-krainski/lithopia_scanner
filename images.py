@@ -237,43 +237,6 @@ def get_ratio(limits, value):
     return (value-min(limits))/abs(limits[0] - limits[1])
 
 
-def crop(image, bounding_box, crop_bounding_box):
-    if bounding_box["east"] < crop_bounding_box["east"] or \
-            bounding_box["west"] > crop_bounding_box["west"] or \
-            bounding_box["south"] > crop_bounding_box["south"] or \
-            bounding_box["north"] < crop_bounding_box["north"]:
-        raise ImageOutOfBoundsException("Requested bounding box is outside of image bounds")
-    cutout_percent = {
-        "east" : get_ratio((bounding_box["east"], bounding_box["west"]), crop_bounding_box["east"]),
-        "west": get_ratio((bounding_box["east"], bounding_box["west"]), crop_bounding_box["west"]),
-        "north": 1.0 - get_ratio((bounding_box["north"], bounding_box["south"]), crop_bounding_box["north"]), ## images are indexed from top
-        "south": 1.0 - get_ratio((bounding_box["north"], bounding_box["south"]), crop_bounding_box["south"]),
-    }
-    print(cutout_percent)
-    cutout_pixel = {}
-    width, height = image.size
-    if cutout_percent["east"] < cutout_percent["west"]:
-        cutout_pixel["left"] = int(np.floor(cutout_percent["east"] * width))
-        cutout_pixel["right"] = int(np.ceil(cutout_percent["west"] * width))
-    else:
-        cutout_pixel["right"] = int(np.ceil(cutout_percent["east"] * width))
-        cutout_pixel["left"] = int(np.floor(cutout_percent["west"] * width))
-    if cutout_percent["south"] < cutout_percent["north"]:
-        cutout_pixel["upper"] = int(np.ceil(cutout_percent["north"] * height))
-        cutout_pixel["lower"] = int(np.floor(cutout_percent["south"] * height))
-    else:
-        cutout_pixel["lower"] = int(np.floor(cutout_percent["north"] * height))
-        cutout_pixel["upper"] = int(np.ceil(cutout_percent["south"] * height))
-    print(cutout_pixel)
-    crop_result = image.crop((
-        cutout_pixel["left"],
-        cutout_pixel["lower"],
-        cutout_pixel["right"],
-        cutout_pixel["upper"],
-    ))
-    return crop_result
-
-
 if __name__ == "__main__":
     print("Starting script...")
     image = get_tci_image()
@@ -282,7 +245,6 @@ if __name__ == "__main__":
     print("Plotting...")
 
     plot_and_save(image, limits = bounding_box)
-
 
     TEST_CUTOUT_BOX = {
         'east': 14.357152,
