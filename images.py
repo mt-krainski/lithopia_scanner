@@ -24,11 +24,6 @@ IMAGE_PATH = "saved_images"
 ARCHIVE_EXT = ".zip"
 
 TCI_FILE_KEYWORD = "TCI.jp2"
-RED_CHANNEL_KEYWORD = "B04.jp2"
-GREEN_CHANNEL_KEYWORD = "B03.jp2"
-BLUE_CHANNEL_KEYWORD = "B02.jp2"
-
-VALUE_THRESHOLD = 2000
 
 # Example dataset definition
 SAT_TYPE = "S2A"
@@ -64,7 +59,7 @@ def get_image_filename(archive, keyword=TCI_FILE_KEYWORD):
     return image_file
 
 
-def get_tci_image(archive_path = ARCHIVE_PATH):
+def get_tci_image(archive_path):
     print("Getting TCI image...")
     img = None
     with zipfile.ZipFile(archive_path) as archive:
@@ -88,12 +83,12 @@ def read_xml_from_archive(archive_path, xml_filename):
     return xml_file
 
 
-def get_inspire_metadata(archive_path = ARCHIVE_PATH):
+def get_inspire_metadata(archive_path):
     INSPIRE_FILENAME = "INSPIRE.xml"
     return read_xml_from_archive(archive_path, INSPIRE_FILENAME)
 
 
-def get_manifest(archive_path = ARCHIVE_PATH):
+def get_manifest(archive_path):
     MANIFEST_FILENAME = 'manifest.safe'
     return read_xml_from_archive(archive_path, MANIFEST_FILENAME)
 
@@ -142,7 +137,7 @@ def get_coordinates(manifest_xml):
     return coordinates_mapped
 
 
-def plot_and_save(image, dataset_name=DATASET_NAME):
+def plot_and_save(image, dataset_name):
 
     fig = plt.figure(figsize=(10, 10), dpi=300)
 
@@ -161,14 +156,10 @@ def plot_and_save(image, dataset_name=DATASET_NAME):
     plt.close(fig)
 
 
-def get_ratio(limits, value):
-    return (value-min(limits))/abs(limits[0] - limits[1])
-
-
 if __name__ == "__main__":
     print("Starting script...")
-    image = get_tci_image()
+    image = get_tci_image(ARCHIVE_PATH)
 
     print("Plotting...")
 
-    plot_and_save(image)
+    plot_and_save(image, DATASET_NAME)
