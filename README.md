@@ -2,6 +2,13 @@
 
 Application for the Lithopia project, which extracts latest Sentinel-2 image for a given area and analyses it for a presence of a visual marker. If such marker is detected, the application is triggerring a blockchain contract.
 
+## Functionalities:
+- script for storing and retrieving credentials in a local file
+- querying Copernicus Open Data Hub and retrieving Sentinel 2 images
+- retrieving, plotting, and trimming images from the Sentinel 2 datasets
+- finding a mapping from geo coordinates to pixel coordinates (coarse, but works)
+- checking acquisition plans for a given location
+
 ## Notes:
 - Sentinel 2 image resolution is 10m per pixel, revisit time is 5 days.
 - [Copernicus data portal](https://scihub.copernicus.eu/dhus/#/home)
