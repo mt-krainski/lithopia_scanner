@@ -60,68 +60,8 @@ def get_image_filename(archive, keyword=TCI_FILE_KEYWORD):
             if image_file is None:
                 image_file = file.filename
             else:
-                warnings.warn("Warning! More than one TCI file found!", ArchiveContentsWarning)
+                warnings.warn(f"Warning! More than one {keyword} file found!", ArchiveContentsWarning)
     return image_file
-
-
-def read_archive_file(image_filename,
-                      archive_path = ARCHIVE_PATH):
-    # Based on https://geopyspark.readthedocs.io/en/latest/tutorials/reading-in-sentinel-data.html
-    with rasterio.open("zip://" + archive_path +
-                       "!" + image_filename) as f:
-        return f.read(1)
-
-
-def get_rgb_from_archive(archive_path = ARCHIVE_PATH):
-
-    print("Extracting image path...")
-
-    archive = zipfile.ZipFile(archive_path)
-
-    red_image_filename = get_image_filename(
-            archive,
-            RED_CHANNEL_KEYWORD)
-
-    green_image_filename = get_image_filename(
-            archive,
-            GREEN_CHANNEL_KEYWORD)
-
-    blue_image_filename = get_image_filename(
-            archive,
-            BLUE_CHANNEL_KEYWORD)
-
-    print("Loading image...")
-
-    red_image = read_archive_file(red_image_filename, archive_path)
-    print("\tRED read")
-    green_image = read_archive_file(green_image_filename, archive_path)
-    print("\tGREEN read")
-    blue_image = read_archive_file(blue_image_filename, archive_path)
-    print("\tBLUE read")
-
-    print("Composing RGB image...")
-
-    color_image = np.stack(
-            (red_image, green_image, blue_image),
-            axis=2)
-
-    del red_image, green_image, blue_image
-
-    np.place(
-        color_image,
-        color_image>VALUE_THRESHOLD,
-        VALUE_THRESHOLD)
-
-    # scaling to 8-bit uints
-    norm_factor = np.max(color_image) / 255
-
-    # Processing row by row to save memory on conversion from int
-    # to float due to division
-    color_image = np.array(
-        [(row/norm_factor).astype(np.uint8)
-                for row in color_image] )
-
-    return color_image
 
 
 def get_tci_image(archive_path = ARCHIVE_PATH):
@@ -202,29 +142,17 @@ def get_coordinates(manifest_xml):
     return coordinates_mapped
 
 
-def plot_and_save(image, dataset_name = DATASET_NAME, limits = None):
+def plot_and_save(image, dataset_name=DATASET_NAME):
 
     fig = plt.figure(figsize=(10, 10), dpi=300)
 
-    if limits is not None:
-        plt.imshow(image, extent=[
-            limits["west"], limits["east"],
-            limits["south"], limits["north"]
-        ], aspect="auto")
-    else:
-        plt.imshow(image)
-        plt.gca().set_axis_off()
-        plt.subplots_adjust(top=1, bottom=0, right=1, left=0,
-                        hspace=0, wspace=0)
-        plt.margins(0, 0)
-        plt.gca().xaxis.set_major_locator(plt.NullLocator())
-        plt.gca().yaxis.set_major_locator(plt.NullLocator())
-
-        # Stores the image in full resolution
-        # plt.imsave(
-        #     os.path.join(IMAGE_PATH, f"{dataset_name}.png"),
-        #     image,
-        #     format='png')
+    plt.imshow(image)
+    plt.gca().set_axis_off()
+    plt.subplots_adjust(top=1, bottom=0, right=1, left=0,
+                    hspace=0, wspace=0)
+    plt.margins(0, 0)
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
     fig.savefig(
         os.path.join(IMAGE_PATH, f"{dataset_name}.png"),
@@ -240,15 +168,7 @@ def get_ratio(limits, value):
 if __name__ == "__main__":
     print("Starting script...")
     image = get_tci_image()
-    bounding_box = get_bounding_box(get_inspire_metadata())
 
     print("Plotting...")
 
-    plot_and_save(image, limits = bounding_box)
-
-    TEST_CUTOUT_BOX = {
-        'east': 14.357152,
-        'north' : 50.055195,
-        'west' : 14.314761,
-        'south' : 50.024767
-    }
+    plot_and_save(image)
