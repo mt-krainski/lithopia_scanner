@@ -4,8 +4,6 @@ from sys import stdout
 
 SAMPLE_LOCATION = (50.083333, 14.416667) # Prague
 
-# SAMPLE_LOCATION = (52.218978, 4.419296) # estec
-
 MASTER_URI = "https://scihub.copernicus.eu/dhus/search?"
 
 PLATFORM_NAME = "Sentinel-2"

@@ -3,7 +3,7 @@ import images
 import os
 from matplotlib import pyplot as plt
 
-SAMPLE_LOCATION = (5.232282, -52.767168) # CSG
+SAMPLE_LOCATION = (50.083333, 14.416667) # Prague
 DATA_PATH = "data"
 IMAGE_PATH = "saved_images"
 
