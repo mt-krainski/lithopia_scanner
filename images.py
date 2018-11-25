@@ -24,6 +24,8 @@ IMAGE_PATH = "saved_images"
 ARCHIVE_EXT = ".zip"
 
 TCI_FILE_KEYWORD = "TCI.jp2"
+INSPIRE_FILENAME = "INSPIRE.xml"
+MANIFEST_FILENAME = 'manifest.safe'
 
 # Example dataset definition
 SAT_TYPE = "S2A"
@@ -84,21 +86,11 @@ def read_xml_from_archive(archive_path, xml_filename):
 
 
 def get_inspire_metadata(archive_path):
-    INSPIRE_FILENAME = "INSPIRE.xml"
     return read_xml_from_archive(archive_path, INSPIRE_FILENAME)
 
 
 def get_manifest(archive_path):
-    MANIFEST_FILENAME = 'manifest.safe'
     return read_xml_from_archive(archive_path, MANIFEST_FILENAME)
-
-
-def get_namespaces_from_xml(xml_file):
-    nsmap = {}
-    for ns in xml_file.xpath('//namespace::*'):
-        if ns[0]:  # Removes the None namespace, neither needed nor supported.
-            nsmap[ns[0]] = ns[1]
-    return nsmap
 
 
 def get_bounding_box(inspire_xml):
@@ -112,13 +104,16 @@ def get_bounding_box(inspire_xml):
     limits = {}
 
     inspire_root = inspire_xml.getroot()
+    nsmap = inspire_root.nsmap.copy()
+    if None in nsmap:
+        del nsmap[None]
 
     bounding_box = inspire_root.xpath(
-            f"//{BOUNDING_BOX_ELEMENT}", namespaces=inspire_root.nsmap)[0]
+            f"//{BOUNDING_BOX_ELEMENT}", namespaces=nsmap)[0]
 
     for element_id in ELEMENTS:
-        element = bounding_box.find(ELEMENTS[element_id], namespaces=inspire_root.nsmap)
-        limits[element_id] = float(element.find(VALUE_ELEMENT, namespaces=inspire_root.nsmap).text)
+        element = bounding_box.find(ELEMENTS[element_id], namespaces=nsmap)
+        limits[element_id] = float(element.find(VALUE_ELEMENT, namespaces=nsmap).text)
 
     return limits
 
@@ -128,7 +123,11 @@ def get_coordinates(manifest_xml):
 
     manifest_root = manifest_xml.getroot()
 
-    coordinates = manifest_xml.xpath(f"//{COORDINATES_TAG}/text()", namespaces=manifest_root.nsmap)[0]
+    nsmap = manifest_root.nsmap.copy()
+    if None in nsmap:
+        del nsmap[None]
+
+    coordinates = manifest_xml.xpath(f"//{COORDINATES_TAG}/text()", namespaces=nsmap)[0]
 
     coordinates_float = [float(x) for x in coordinates.strip().split(" ")]
 
