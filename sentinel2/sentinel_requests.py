@@ -4,6 +4,8 @@ from sys import stdout
 from io import BytesIO
 from PIL import Image
 
+from threading import Thread, Lock
+
 SAMPLE_LOCATION = (50.083333, 14.416667) # Prague
 
 MASTER_URI = "https://scihub.copernicus.eu/dhus/search?"
@@ -60,6 +62,44 @@ def get_data_size(entry):
     for item in entry['str']:
         if item['name'] == 'size':
             return item['content']
+
+
+class DownloadWrapper:
+    def __init__(self, entry):
+        self.download_link = get_data_link(entry)
+        self.dataset_name = get_data_name(entry)
+        self.filesize = size_to_float(get_data_size(entry))
+
+        self.file_path = path.join(DATA_PATH, self.dataset_name + ARCHIVE_EXT)
+        self.lock = Lock()
+        self.progress = 0.0
+        self.chunk_size = 1024
+
+    def _download(self):
+        with credentials.request(self.download_link, stream=True) as r:
+            with open(self.file_path, 'wb') as f:
+                chunk_id = 0
+                for chunk in r.iter_content(chunk_size=self.chunk_size):
+                    size_downloaded = chunk_id * self.chunk_size
+                    with self.lock:
+                        self.progress = size_downloaded / self.filesize
+                    if chunk:
+                        f.write(chunk)
+                    chunk_id += 1
+
+    def start_download(self, overwrite=False):
+        file_exists = path.isfile(self.file_path)
+        if overwrite or not file_exists:
+            thread = Thread(target=self._download)
+            thread.daemon = True
+            thread.start()
+        else:
+            with self.lock:
+                self.progress = 1
+
+    def get_progress(self):
+        with self.lock:
+            return self.progress
 
 
 def download_file(url, filename="temp.zip", filesize=None):
@@ -129,6 +169,19 @@ def format_size(size):
         size /=  power
         n += 1
     return f"{size:.2f} {Dic_powerN[n]}B"
+
+
+def size_to_float(size_str):
+    #2**10 = 1024
+    power = 2**10
+    n = 0
+    Dic_powerN = {'kB': 1, 'MB': 2, 'GB': 3, 'TB': 4}
+    for key in Dic_powerN:
+        if key in size_str:
+            value = float(size_str.split(' ')[0])
+            return value*(power**Dic_powerN[key])
+
+    return float(size_str.split(' ')[0])
 
 
 if __name__ == "__main__":
