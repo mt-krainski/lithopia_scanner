@@ -56,8 +56,7 @@ if __name__ == "__main__":
 
     args = parse_arguments()
 
-    import sentinel_requests
-    import images
+    from sentinel2 import sentinel_requests, images
     import os
     from matplotlib import pyplot as plt
 

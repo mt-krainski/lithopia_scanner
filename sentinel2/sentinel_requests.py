@@ -1,4 +1,4 @@
-import credentials
+from sentinel2 import credentials
 from os import path
 from sys import stdout
 from io import BytesIO

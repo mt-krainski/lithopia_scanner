@@ -1,4 +1,4 @@
-import images
+from sentinel2 import images
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import optimize
