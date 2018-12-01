@@ -136,6 +136,35 @@ def get_coordinates(manifest_xml):
     return coordinates_mapped
 
 
+def crop_by_coords(bounding_box, image, transform_function):
+    """
+    Crops the image to a bounding box given in geographical coordinates
+    :param bounding_box: dict storing keys 'lower', 'left', 'upper', 'right',
+        holding geo coordinates of the bounding box
+    :param image: pillow image to be cropped
+    :param transform_function: function capable of transorming geo coordinates
+        to image pixels
+    :return: cropped image
+    """
+    bounding_pixels = transform_function(
+        [[bounding_box['left'], bounding_box['right']],
+         [bounding_box['upper'], bounding_box['lower']]])
+
+    bounding_pixels = {
+        'left': bounding_pixels[0][0],
+        'right': bounding_pixels[0][1],
+        'upper': bounding_pixels[1][0],
+        'lower': bounding_pixels[1][1]
+    }
+
+    return image.crop((
+        bounding_pixels['left'],
+        bounding_pixels['upper'],
+        bounding_pixels['right'],
+        bounding_pixels['lower']
+    ))
+
+
 def plot_and_save(image, dataset_name):
 
     fig = plt.figure(figsize=(10, 10), dpi=300)
