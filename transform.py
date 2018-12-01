@@ -218,9 +218,9 @@ def projection_transform(coords, transform):
     :return: transformed coords in the same format as input
     """
 
-    points = np.array([coords[0][:-1],
-                         coords[1][:-1],
-                         (len(coords[0]) - 1) * [1]])
+    points = np.array([coords[0],
+                         coords[1],
+                         len(coords[0]) * [1]])
 
     result = transform.dot(points)
 
