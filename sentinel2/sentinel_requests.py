@@ -32,7 +32,7 @@ def get_latest_with_cloud_limit(entries, cloudcoverpercentage_limit = 10.0):
         if type(entry['double']) is list:
             for item in entry['double']:
                 if item['name'] == cloud_cover_percentage_variable_name:
-                    if float(item['content']) < cloudcoverpercentage_limit:
+                    if float(item['content']) <= cloudcoverpercentage_limit:
                         return entry
         elif type(entry['double']) is dict:
             if entry['double']['name'] == cloud_cover_percentage_variable_name:
