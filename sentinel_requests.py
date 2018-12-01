@@ -1,6 +1,8 @@
 import credentials
 from os import path
 from sys import stdout
+from io import BytesIO
+from PIL import Image
 
 SAMPLE_LOCATION = (50.083333, 14.416667) # Prague
 
@@ -36,6 +38,10 @@ def get_latest_with_cloud_limit(entries, cloudcoverpercentage_limit = 10.0):
             if entry['double']['name'] == cloud_cover_percentage_variable_name:
                 if float(entry['double']['content']) < cloudcoverpercentage_limit:
                     return entry
+
+
+def get_entries(response):
+    return response.json()['feed']['entry']
 
 
 def get_data_link(entry):
@@ -85,6 +91,14 @@ def download_file(url, filename="temp.zip", filesize=None):
     stdout.write("\n")
     print("Done!")
     return local_filename
+
+
+def quicklook(entry):
+    for item in entry['link']:
+        if item.get('rel', None) == 'icon':
+            data = credentials.request(item['href'])
+            img = Image.open(BytesIO(data.content))
+            return img
 
 
 def download(entry, overwrite=False):
