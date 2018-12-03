@@ -3,6 +3,7 @@ from os import path
 from sys import stdout
 from io import BytesIO
 from PIL import Image
+import os
 
 from threading import Thread, Lock
 
@@ -76,6 +77,8 @@ class DownloadWrapper:
         self.finished = False
 
     def _download(self):
+        if not os.path.exists(DATA_PATH):
+            os.makedirs(DATA_PATH)
         with credentials.request(self.download_link, stream=True) as r:
             with open(self.file_path, 'wb') as f:
                 chunk_id = 0
@@ -109,6 +112,8 @@ class DownloadWrapper:
 
 
 def download_file(url, filename="temp.zip", filesize=None):
+    if not os.path.exists(DATA_PATH):
+        os.makedirs(DATA_PATH)
     local_filename = path.join(DATA_PATH, filename+ARCHIVE_EXT)
     # NOTE the stream=True parameter
     print("Downloading file...")
@@ -151,6 +156,9 @@ def download(entry, overwrite=False):
     download_link = get_data_link(entry)
     dataset_name = get_data_name(entry)
     filesize = get_data_size(entry)
+
+    if not os.path.exists(DATA_PATH):
+        os.makedirs(DATA_PATH)
 
     file_path = path.join(DATA_PATH, dataset_name+ARCHIVE_EXT)
 
