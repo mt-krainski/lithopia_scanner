@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from io import BytesIO
 from lxml import etree
+import pytz
 
 class ArchiveContentsWarning(ResourceWarning):
     pass
@@ -148,7 +149,7 @@ def get_acquisition_time(manifest_xml):
 
     time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-    return datetime.strptime(time, time_format)
+    return datetime.strptime(time, time_format).replace(tzinfo=pytz.UTC)
 
 
 def crop_by_coords(bounding_box, image, transform_function):
