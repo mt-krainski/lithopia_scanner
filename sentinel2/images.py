@@ -1,5 +1,4 @@
-import rasterio
-import numpy as np
+from datetime import datetime
 import zipfile
 import warnings
 import os
@@ -134,6 +133,22 @@ def get_coordinates(manifest_xml):
     coordinates_mapped = [coordinates_float[1::2], coordinates_float[0::2]]
 
     return coordinates_mapped
+
+def get_acquisition_time(manifest_xml):
+
+    START_TIME_TAG = "safe:acquisitionPeriod/safe:startTime"
+
+    manifest_root = manifest_xml.getroot()
+
+    nsmap = manifest_root.nsmap.copy()
+    if None in nsmap:
+        del nsmap[None]
+
+    time = manifest_xml.xpath(f"//{START_TIME_TAG}/text()", namespaces=nsmap)[0]
+
+    time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+    return datetime.strptime(time, time_format)
 
 
 def crop_by_coords(bounding_box, image, transform_function):
