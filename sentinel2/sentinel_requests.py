@@ -69,11 +69,11 @@ class DownloadWrapper:
         self.download_link = get_data_link(entry)
         self.dataset_name = get_data_name(entry)
         self.filesize = size_to_float(get_data_size(entry))
-
         self.file_path = path.join(DATA_PATH, self.dataset_name + ARCHIVE_EXT)
         self.lock = Lock()
         self.progress = 0.0
         self.chunk_size = 1024
+        self.finished = False
 
     def _download(self):
         with credentials.request(self.download_link, stream=True) as r:
@@ -86,20 +86,26 @@ class DownloadWrapper:
                     if chunk:
                         f.write(chunk)
                     chunk_id += 1
+        with self.lock:
+            self.finished = True
 
     def start_download(self, overwrite=False):
         file_exists = path.isfile(self.file_path)
         if overwrite or not file_exists:
             thread = Thread(target=self._download)
-            thread.daemon = True
             thread.start()
         else:
             with self.lock:
                 self.progress = 1
+                self.finished = True
 
     def get_progress(self):
         with self.lock:
             return self.progress
+
+    def check_finished(self):
+        with self.lock:
+            return self.finished
 
 
 def download_file(url, filename="temp.zip", filesize=None):

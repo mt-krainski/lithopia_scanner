@@ -264,6 +264,29 @@ def get_transform_function(image, coords):
     return transform
 
 
+def transform_function(transformation_matrix):
+    """
+    Returns transformation using given matrix as a function
+    :param transformation_matrix: transformation matrix to be used
+    :return: a function which transforms coordinates
+        from geographic coordinates to image coordinates
+    """
+    def transform(points):
+        """
+        Transforms points from geographical coordinates
+            to pixel coordinates. This stores the transformation matrix
+            in a closure
+        :param points: coordinates to be transformed. They should be
+            in a format returned by images.get_coordinates, i.e. a list,
+            first element of which is a list of longitudes, second element
+            is a list of latitudes:
+            [[lon1, lon2, ..., lonN], [lat1, lat2, ..., latN]]
+        :return: transformed points in the same format as input
+        """
+        return projection_transform(points, transformation_matrix)
+    return transform
+
+
 if __name__ == "__main__":
     ARCHIVE = "data/S2B_MSIL1C_20181117T100259_N0207_R122_T33UVR_20181117T120601.zip"
 
