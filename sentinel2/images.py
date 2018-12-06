@@ -26,6 +26,7 @@ ARCHIVE_EXT = ".zip"
 TCI_FILE_KEYWORD = "TCI.jp2"
 INSPIRE_FILENAME = "INSPIRE.xml"
 MANIFEST_FILENAME = 'manifest.safe'
+INSTRUMENT_FILENAME = 'MTD_MSIL1C.xml'
 
 # Example dataset definition
 SAT_TYPE = "S2A"
@@ -93,6 +94,10 @@ def get_manifest(archive_path):
     return read_xml_from_archive(archive_path, MANIFEST_FILENAME)
 
 
+def get_instrument_description(archive_path):
+    return read_xml_from_archive(archive_path, INSTRUMENT_FILENAME)
+
+
 def get_bounding_box(inspire_xml):
     BOUNDING_BOX_ELEMENT = "gmd:EX_GeographicBoundingBox"
     ELEMENTS = {"west"  : "gmd:westBoundLongitude",
@@ -150,6 +155,23 @@ def get_acquisition_time(manifest_xml):
     time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
     return datetime.strptime(time, time_format).replace(tzinfo=pytz.UTC)
+
+
+def get_cloud_cover(archive_path):
+
+    instrument_xml = get_instrument_description(archive_path)
+
+    CLOUD_COVER_TAG = "n1:Quality_Indicators_Info/Cloud_Coverage_Assessment"
+
+    manifest_root = instrument_xml.getroot()
+
+    nsmap = manifest_root.nsmap.copy()
+    if None in nsmap:
+        del nsmap[None]
+
+    cloud_cover = instrument_xml.xpath(f"//{CLOUD_COVER_TAG}/text()", namespaces=nsmap)[0]
+
+    return float(cloud_cover)
 
 
 def crop_by_coords(bounding_box, image, transform_function):
