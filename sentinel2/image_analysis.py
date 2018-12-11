@@ -115,7 +115,18 @@ def score(x, *args):
     BORDER = 2
     print(x)
     M = np.float32([[1, 0, x[0]], [0, 1, x[1]]])
-    rows, cols, ch = im_B.shape
+
+    try:
+        try:
+            rows, cols = im_B.shape
+        except ValueError:
+            rows, cols, ch = im_B.shape
+    except AttributeError:
+        try:
+            rows, cols = im_B.size
+        except ValueError:
+            rows, cols, ch = im_B.size
+
     im_A = im_A[BORDER:rows-BORDER, BORDER:cols-BORDER]
     dst = cv2.warpAffine(im_B, M, (cols, rows))
     dst = dst[BORDER:rows-BORDER, BORDER:cols-BORDER]
@@ -129,7 +140,17 @@ def score(x, *args):
 def get_diff_map(image_A, image_B, range=5):
     STEP = 0.1
 
-    rows, cols, ch = image_A.shape
+    try:
+        try:
+            rows, cols = image_A.shape
+        except ValueError:
+            rows, cols, ch = image_A.shape
+    except AttributeError:
+        try:
+            rows, cols = image_A.size
+        except ValueError:
+            rows, cols, ch = image_A.size
+
     im_A = image_A[range:rows - range, range:cols - range]
     # res_map = []
     res_dict = []
