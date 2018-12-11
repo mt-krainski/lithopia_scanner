@@ -167,9 +167,15 @@ def get_offset(original, secondary):
 
 def offset_image(image, offset):
     try:
-        rows, cols = image.shape
-    except ValueError:
-        rows, cols, ch = image.shape
+        try:
+            rows, cols = image.shape
+        except ValueError:
+            rows, cols, ch = image.shape
+    except AttributeError:
+        try:
+            rows, cols = image.size
+        except ValueError:
+            rows, cols, ch = image.size
 
     M = np.float32([[1, 0, offset[0]], [0, 1, offset[1]]])
     return cv2.warpAffine(image, M, (cols, rows))
