@@ -9,3 +9,6 @@ lxml
 scipy
 scikit-image
 beautifulsoup4
+opencv-python
+sklearn
+imageio
