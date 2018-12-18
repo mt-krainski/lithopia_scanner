@@ -12,3 +12,4 @@ beautifulsoup4
 opencv-python
 sklearn
 imageio
+shapely
