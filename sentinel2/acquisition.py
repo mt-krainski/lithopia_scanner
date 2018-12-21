@@ -40,7 +40,8 @@ class AcquisitionSwath:
                  mode = None,
                  orbit_absolute = None,
                  orbit_relative = None,
-                 scenes = None):
+                 scenes = None,
+                 satellite = None):
         self.polygon = polygon
         self.ObservationTimeStart = observation_start
         self.ObservationTimeStop = observation_end
@@ -52,13 +53,14 @@ class AcquisitionSwath:
         self.OrbitAbsolute = orbit_absolute
         self.OrbitRelative = orbit_relative
         self.Scenes = scenes
+        self.satellite = satellite
 
     NAME_PATH = 'kml:name'
     DATA_PATH = 'kml:ExtendedData'
     POLYGON_PATH = 'kml:Polygon/kml:outerBoundaryIs/kml:LinearRing/kml:coordinates'
 
     @staticmethod
-    def from_placemark_xml(placemark_xml):
+    def from_placemark_xml(placemark_xml, satellite_name=None):
         nsmap = placemark_xml.nsmap
         if None in nsmap:
             del nsmap[None]  ## emtpy namespaces are not supported
@@ -84,6 +86,8 @@ class AcquisitionSwath:
 
         class_object.polygon = Polygon(polygon_definition)
 
+        class_object.satellite = satellite_name
+
         return class_object
 
     def parse_dates(self):
@@ -100,7 +104,7 @@ class AcquisitionSwath:
         return self.polygon.contains(point)
 
 
-def decode_kml_file(kml_file):
+def decode_kml_file(kml_file, satellite=None):
     PLACEMARK_PATH = "kml:Placemark"
     nsmap = kml_file.nsmap
     if None in nsmap:
@@ -108,7 +112,7 @@ def decode_kml_file(kml_file):
     placemarks = kml_file.xpath(f"//{PLACEMARK_PATH}", namespaces=nsmap)
     placemarks_decoded = []
     for placemark in placemarks:
-        placemarks_decoded.append(AcquisitionSwath.from_placemark_xml(placemark))
+        placemarks_decoded.append(AcquisitionSwath.from_placemark_xml(placemark, satellite))
     return placemarks_decoded
 
 
@@ -126,7 +130,7 @@ def get_acquisition_plan():
     kml_a = etree.XML(requests.get(f"{SENTINEL_URL_BASE}{plan_link_a}").content)
     kml_b = etree.XML(requests.get(f"{SENTINEL_URL_BASE}{plan_link_b}").content)
 
-    return decode_kml_file(kml_a) + decode_kml_file(kml_b)
+    return decode_kml_file(kml_a, "Sentinel-2A") + decode_kml_file(kml_b, "Sentinel-2B")
 
 
 if __name__ == "__main__":
