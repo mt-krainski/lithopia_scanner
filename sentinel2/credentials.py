@@ -39,9 +39,9 @@ def test_credentials(username, password):
               password))
 
     if res.status_code != 200:
-        return True
-    else:
         return False
+    else:
+        return True
 
 
 def request(uri, **kwargs):
