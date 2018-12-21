@@ -97,5 +97,7 @@ if __name__ == "__main__":
     if not test_credentials(username, password):
         print("Request failed! Credentials invalid...")
         exit()
+    else:
+        print("Credentials correct, storing...")
 
     store_credentials(username, password)
