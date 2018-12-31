@@ -1,5 +1,5 @@
 .idea
-data/**
+**/data/**
 .credentials.json
 saved_images/
 __pycache__/

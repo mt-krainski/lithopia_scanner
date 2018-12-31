@@ -97,9 +97,14 @@ class AcquisitionSwath:
     def get_acquisition_period(self):
         return [self.ObservationTimeStart, self.ObservationTimeStop]
 
-    def is_point_in_polygon(self, point):
-        if not isinstance(point, Point):
-            point = Point(point)
+    def is_point_in_polygon(self, point=None, lat=None, lon=None):
+        if point is not None:
+            if not isinstance(point, Point):
+                point = Point(point)
+        elif lat is not None and lon is not None:
+            point = Point((lon, lat)) # x, y coords
+        else:
+            raise ValueError("Must provide either point or lat and lon!")
 
         return self.polygon.contains(point)
 
