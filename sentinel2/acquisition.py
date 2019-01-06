@@ -1,3 +1,5 @@
+from typing import List
+
 if __name__ == "__main__":
 
     import argparse
@@ -121,7 +123,12 @@ def decode_kml_file(kml_file, satellite=None):
     return placemarks_decoded
 
 
-def get_acquisition_plan():
+def get_acquisition_plan(num_files: int = 4) -> List[AcquisitionSwath]:
+    """
+    Gets and processes the lastest num_files of KML files from the sentinel acquisition plans website
+    :param num_files:
+    :return: list of AcquisitionSwath objects holding the acquisitions
+    """
 
     SENTINEL_URL_BASE = "https://sentinel.esa.int"
     ACQUISITION_PLANS = "/web/sentinel/missions/sentinel-2/acquisition-plans"
@@ -129,13 +136,16 @@ def get_acquisition_plan():
     acquisition_response = requests.get(f"{SENTINEL_URL_BASE}{ACQUISITION_PLANS}").text
 
     page_parser = BeautifulSoup(acquisition_response, 'html.parser')
-    plan_link_a = page_parser.find('div', 'sentinel-2a').find('a')['href']
-    plan_link_b = page_parser.find('div', 'sentinel-2b').find('a')['href']
+    results = []
 
-    kml_a = etree.XML(requests.get(f"{SENTINEL_URL_BASE}{plan_link_a}").content)
-    kml_b = etree.XML(requests.get(f"{SENTINEL_URL_BASE}{plan_link_b}").content)
+    for i in range(num_files):
+        plan_link_a = page_parser.find('div', 'sentinel-2a').find_all('a')[i]['href']
+        plan_link_b = page_parser.find('div', 'sentinel-2b').find_all('a')[i]['href']
+        kml_a = etree.XML(requests.get(f"{SENTINEL_URL_BASE}{plan_link_a}").content)
+        kml_b = etree.XML(requests.get(f"{SENTINEL_URL_BASE}{plan_link_b}").content)
+        results += decode_kml_file(kml_a, "Sentinel-2A") + decode_kml_file(kml_b, "Sentinel-2B")
 
-    return decode_kml_file(kml_a, "Sentinel-2A") + decode_kml_file(kml_b, "Sentinel-2B")
+    return results
 
 
 if __name__ == "__main__":

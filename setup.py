@@ -4,7 +4,7 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(name='sentinel2',
-      version='0.14',
+      version='0.15',
       description='simple library for handling sentinel 2 requests and images',
       url='http://github.com/mt-krainski/lithopia',
       author='M. Krainski',
