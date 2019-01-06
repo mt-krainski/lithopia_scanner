@@ -130,7 +130,7 @@ def decode_kml_file(kml_file, satellite=None):
     return placemarks_decoded
 
 
-def get_acquisition_plan(num_files: int = 2) -> List[AcquisitionSwath]:
+def get_acquisition_plan(num_files: int = 4) -> List[AcquisitionSwath]:
     """
     Gets and processes the lastest num_files of KML files from the sentinel acquisition plans website
     :param num_files:
