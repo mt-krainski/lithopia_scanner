@@ -1,5 +1,7 @@
 from typing import List
 
+from lxml.etree import XPathEvalError
+
 if __name__ == "__main__":
 
     import argparse
@@ -116,7 +118,12 @@ def decode_kml_file(kml_file, satellite=None):
     nsmap = kml_file.nsmap
     if None in nsmap:
         del nsmap[None] ## emtpy namespaces are not supported
-    placemarks = kml_file.xpath(f"//{PLACEMARK_PATH}", namespaces=nsmap)
+    try:
+        placemarks = kml_file.xpath(f"//{PLACEMARK_PATH}", namespaces=nsmap)
+    except XPathEvalError:
+        PLACEMARK_PATH = "Placemark"
+        placemarks = kml_file.xpath(f"//{PLACEMARK_PATH}")
+
     placemarks_decoded = []
     for placemark in placemarks:
         placemarks_decoded.append(AcquisitionSwath.from_placemark_xml(placemark, satellite))
