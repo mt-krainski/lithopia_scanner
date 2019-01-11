@@ -1,12 +1,15 @@
 import unittest
 from lxml import etree
 from shapely.geometry.polygon import Polygon
-
+import os
 
 from sentinel2 import acquisition
 
-TEST_FILE_A = 'resources/_test.kml'
-TEST_FILE_B = 'resources/_test2.kml'
+DIR = os.path.dirname(os.path.realpath(__file__))
+TEST_RESOURCES_DIR = 'resources'
+
+TEST_FILE_A = os.path.join(DIR, TEST_RESOURCES_DIR, '_test.kml')
+TEST_FILE_B = os.path.join(DIR, TEST_RESOURCES_DIR, '_test2.kml')
 
 class TestAcquisition(unittest.TestCase):
     def test_get_acquisition(self):

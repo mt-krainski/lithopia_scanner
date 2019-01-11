@@ -1,3 +1,5 @@
+![](https://travis-ci.org/mt-krainski/lithopia_scanner.svg?branch=master)
+
 ## Lithopia scanner
 
 Application for the Lithopia project, which extracts latest Sentinel-2 image for a given area and analyses it for a presence of a visual marker. If such marker is detected, the application is triggerring a blockchain contract.
