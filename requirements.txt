@@ -13,3 +13,4 @@ opencv-python
 sklearn
 imageio
 shapely
+pytz
