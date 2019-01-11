@@ -9,7 +9,7 @@ matrix:
 
 install:
   - pip install -r requirements.txt
-  - pip install ./sentinel2
+  - pip install .
 
 
 script:
