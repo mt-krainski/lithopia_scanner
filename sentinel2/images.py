@@ -28,6 +28,8 @@ INSPIRE_FILENAME = "INSPIRE.xml"
 MANIFEST_FILENAME = 'manifest.safe'
 INSTRUMENT_FILENAME = 'MTD_MSIL1C.xml'
 
+REDUCED_ARCHIVE_APPENDIX = "_reduced"
+
 # Example dataset definition
 SAT_TYPE = "S2A"
 PROD_LEVEL = "MSIL1C"
@@ -96,6 +98,33 @@ def get_manifest(archive_path):
 
 def get_instrument_description(archive_path):
     return read_xml_from_archive(archive_path, INSTRUMENT_FILENAME)
+
+
+def reduce_archive(archive_path: str) -> str:
+    inspire_data = get_inspire_metadata(archive_path)
+    manifest = get_manifest(archive_path)
+    instrument_description = get_instrument_description(archive_path)
+    tci_image = get_tci_image(archive_path)
+
+    with zipfile.ZipFile(archive_path) as archive:
+        tci_image_filename = get_image_filename(archive)
+
+    reduced_archive_path = archive_path.split(ARCHIVE_EXT)[0] + REDUCED_ARCHIVE_APPENDIX + ARCHIVE_EXT
+
+    # with open(os.path.basename(tci_image_filename), 'w') as file:
+    #     tci_image.save(file, 'JPEG2000')
+
+    with zipfile.ZipFile(reduced_archive_path, 'w') as archive:
+        with archive.open(os.path.basename(tci_image_filename), 'w') as file:
+            tci_image.save(file, 'JPEG2000', codeblock_size=(256, 256))
+        with archive.open(INSPIRE_FILENAME, 'w') as file:
+            file.write(etree.tostring(inspire_data, pretty_print=True))
+        with archive.open(MANIFEST_FILENAME, 'w') as file:
+            file.write(etree.tostring(manifest, pretty_print=True))
+        with archive.open(INSTRUMENT_FILENAME, 'w') as file:
+            file.write(etree.tostring(instrument_description, pretty_print=True))
+
+    return reduced_archive_path
 
 
 def get_bounding_box(inspire_xml):
@@ -223,9 +252,13 @@ def plot_and_save(image, dataset_name):
 
 
 if __name__ == "__main__":
-    print("Starting script...")
-    image = get_tci_image(ARCHIVE_PATH)
+    # print("Starting script...")
+    # image = get_tci_image(ARCHIVE_PATH)
+    #
+    # print("Plotting...")
+    #
+    # plot_and_save(image, DATASET_NAME)
 
-    print("Plotting...")
+    ARCHIVE_NAME = "S2A_MSIL1C_20181016T101021_N0206_R022_T33UUQ_20181016T121930.zip"
 
-    plot_and_save(image, DATASET_NAME)
+    reduce_archive(os.path.join(DATA_PATH, ARCHIVE_NAME))
